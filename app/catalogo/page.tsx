@@ -18,6 +18,7 @@ interface CatalogoPageProps {
     categoria?: string
     color?: string
     stock?: string
+    oferta?: string
   }>
 }
 
@@ -25,10 +26,12 @@ async function ProductGrid({
   categoria,
   color,
   soloStock,
+  soloOferta,
 }: {
   categoria?: string
   color?: string
   soloStock?: boolean
+  soloOferta?: boolean
 }) {
   let products = await getProducts({
     categoria,
@@ -39,6 +42,13 @@ async function ProductGrid({
   if (color) {
     products = products.filter((product) =>
       product.variantes.some((v) => v.color_id === color)
+    )
+  }
+
+  // Filter by offer on client side (since es_oferta is in variants)
+  if (soloOferta) {
+    products = products.filter((product) =>
+      product.variantes.some((v) => v.es_oferta === true)
     )
   }
 
@@ -53,7 +63,7 @@ async function ProductGrid({
   }
 
   return (
-    <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:gap-6">
+    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 md:grid-cols-2 lg:grid-cols-3 lg:gap-6">
       {products.map((product) => (
         <ProductCard key={product.id} product={product} />
       ))}
@@ -63,7 +73,7 @@ async function ProductGrid({
 
 function ProductGridSkeleton() {
   return (
-    <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:gap-6">
+    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 md:grid-cols-2 lg:grid-cols-3 lg:gap-6">
       {[...Array(9)].map((_, i) => (
         <ProductCardSkeleton key={i} />
       ))}
@@ -79,6 +89,7 @@ export default async function CatalogoPage({ searchParams }: CatalogoPageProps) 
   ])
 
   const selectedCategory = categories.find((c) => c.id === params.categoria)
+  const isFilteringOffers = params.oferta === "true"
 
   return (
     <div className="min-h-screen bg-background">
@@ -89,21 +100,27 @@ export default async function CatalogoPage({ searchParams }: CatalogoPageProps) 
           {/* Header */}
           <div className="mb-8">
             <h1 className="font-[family-name:var(--font-poppins)] text-3xl font-bold text-foreground sm:text-4xl">
-              {selectedCategory ? selectedCategory.nombre : "Catálogo"}
+              {isFilteringOffers ? "Ofertas" : selectedCategory ? selectedCategory.nombre : "Catálogo"}
             </h1>
             <p className="mt-2 text-muted-foreground">
-              {selectedCategory
-                ? selectedCategory.descripcion || `Todos los productos de ${selectedCategory.nombre}`
-                : "Explorá todos nuestros muebles de pino"}
+              {isFilteringOffers 
+                ? "Aprovecha nuestras mejores promociones en muebles de pino"
+                : selectedCategory
+                  ? `Todos los productos de ${selectedCategory.nombre}`
+                  : "Explorá todos nuestros muebles de pino"
+              }
             </p>
           </div>
 
           {/* Filters + Grid */}
           <div className="flex flex-col gap-6 lg:flex-row lg:gap-8">
-            <CatalogFilters categories={categories} colors={colors} />
+            {/* Desktop Filters */}
+            <div className="hidden lg:block">
+              <CatalogFilters categories={categories} colors={colors} />
+            </div>
 
             <div className="flex-1">
-              {/* Mobile filter button is inside CatalogFilters */}
+              {/* Mobile filter button */}
               <div className="mb-6 lg:hidden">
                 <CatalogFilters categories={categories} colors={colors} />
               </div>
@@ -113,6 +130,7 @@ export default async function CatalogoPage({ searchParams }: CatalogoPageProps) 
                   categoria={params.categoria}
                   color={params.color}
                   soloStock={params.stock === "true"}
+                  soloOferta={params.oferta === "true"}
                 />
               </Suspense>
             </div>

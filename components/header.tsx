@@ -74,7 +74,7 @@ export function Header() {
         {/* Mobile Menu */}
         <Sheet open={isOpen} onOpenChange={setIsOpen}>
           <SheetTrigger asChild className="lg:hidden">
-            <Button variant="ghost" size="icon">
+            <Button variant="ghost" size="icon" className="min-h-[44px] min-w-[44px]">
               <Menu className="h-6 w-6" />
               <span className="sr-only">Abrir menú</span>
             </Button>
@@ -94,7 +94,7 @@ export function Header() {
                   <Link
                     key={item.name}
                     href={item.href}
-                    className="text-lg font-medium text-foreground/80 transition-colors hover:text-primary"
+                    className="text-base font-medium text-foreground/80 transition-colors hover:text-primary py-2 leading-relaxed"
                     onClick={() => setIsOpen(false)}
                   >
                     {item.name}
@@ -103,7 +103,7 @@ export function Header() {
               </nav>
               <Button
                 asChild
-                className="mt-4 bg-[#C89B6D] hover:bg-[#B8895D] text-[#2B2B2B] font-medium"
+                className="mt-4 bg-[#C89B6D] hover:bg-[#B8895D] text-[#2B2B2B] font-medium min-h-[44px]"
               >
                 <a href={whatsappUrl} target="_blank" rel="noopener noreferrer">
                   <MessageCircle className="mr-2 h-4 w-4" />

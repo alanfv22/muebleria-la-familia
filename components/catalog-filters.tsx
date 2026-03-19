@@ -33,6 +33,7 @@ export function CatalogFilters({ categories, colors }: CatalogFiltersProps) {
   const selectedCategory = searchParams.get("categoria")
   const selectedColor = searchParams.get("color")
   const soloStock = searchParams.get("stock") === "true"
+  const soloOferta = searchParams.get("oferta") === "true"
 
   const createQueryString = useCallback(
     (params: Record<string, string | null>) => {
@@ -60,7 +61,7 @@ export function CatalogFilters({ categories, colors }: CatalogFiltersProps) {
     router.push("/catalogo")
   }
 
-  const hasActiveFilters = selectedCategory || selectedColor || soloStock
+  const hasActiveFilters = selectedCategory || selectedColor || soloStock || soloOferta
 
   const FilterContent = () => (
     <div className="space-y-6">
@@ -77,7 +78,7 @@ export function CatalogFilters({ categories, colors }: CatalogFiltersProps) {
         </Button>
       )}
 
-      <Accordion type="multiple" defaultValue={["categoria", "color", "stock"]} className="w-full">
+      <Accordion type="multiple" defaultValue={["categoria", "color", "stock", "oferta"]} className="w-full">
         {/* Category Filter */}
         <AccordionItem value="categoria">
           <AccordionTrigger className="font-[family-name:var(--font-poppins)] font-semibold">
@@ -86,17 +87,18 @@ export function CatalogFilters({ categories, colors }: CatalogFiltersProps) {
           <AccordionContent>
             <div className="space-y-3 pt-2">
               {categories.map((category) => (
-                <div key={category.id} className="flex items-center gap-2">
+                <div key={category.id} className="flex items-center gap-3 min-h-[44px]">
                   <Checkbox
                     id={`cat-${category.id}`}
                     checked={selectedCategory === category.id}
                     onCheckedChange={(checked) => {
                       updateFilter("categoria", checked ? category.id : null)
                     }}
+                    className="min-w-[44px] min-h-[44px] flex items-center justify-center"
                   />
                   <Label
                     htmlFor={`cat-${category.id}`}
-                    className="text-sm cursor-pointer"
+                    className="text-sm cursor-pointer flex-1 leading-relaxed"
                   >
                     {category.nombre}
                   </Label>
@@ -114,21 +116,22 @@ export function CatalogFilters({ categories, colors }: CatalogFiltersProps) {
           <AccordionContent>
             <div className="space-y-3 pt-2">
               {colors.map((color) => (
-                <div key={color.id} className="flex items-center gap-2">
+                <div key={color.id} className="flex items-center gap-3 min-h-[44px]">
                   <Checkbox
                     id={`color-${color.id}`}
                     checked={selectedColor === color.id}
                     onCheckedChange={(checked) => {
                       updateFilter("color", checked ? color.id : null)
                     }}
+                    className="min-w-[44px] min-h-[44px] flex items-center justify-center"
                   />
                   <div
-                    className="h-4 w-4 rounded-full border border-border"
+                    className="h-4 w-4 rounded-full border border-border flex-shrink-0"
                     style={{ backgroundColor: getColorHex(color.nombre) }}
                   />
                   <Label
                     htmlFor={`color-${color.id}`}
-                    className="text-sm cursor-pointer"
+                    className="text-sm cursor-pointer flex-1 leading-relaxed"
                   >
                     {color.nombre}
                   </Label>
@@ -144,16 +147,39 @@ export function CatalogFilters({ categories, colors }: CatalogFiltersProps) {
             Disponibilidad
           </AccordionTrigger>
           <AccordionContent>
-            <div className="flex items-center gap-2 pt-2">
+            <div className="flex items-center gap-3 pt-2 min-h-[44px]">
               <Checkbox
                 id="solo-stock"
                 checked={soloStock}
                 onCheckedChange={(checked) => {
                   updateFilter("stock", checked ? "true" : null)
                 }}
+                className="min-w-[44px] min-h-[44px] flex items-center justify-center"
               />
-              <Label htmlFor="solo-stock" className="text-sm cursor-pointer">
+              <Label htmlFor="solo-stock" className="text-sm cursor-pointer flex-1 leading-relaxed">
                 Solo entrega inmediata
+              </Label>
+            </div>
+          </AccordionContent>
+        </AccordionItem>
+
+        {/* Offer Filter */}
+        <AccordionItem value="oferta">
+          <AccordionTrigger className="font-[family-name:var(--font-poppins)] font-semibold">
+            Promociones
+          </AccordionTrigger>
+          <AccordionContent>
+            <div className="flex items-center gap-3 pt-2 min-h-[44px]">
+              <Checkbox
+                id="solo-oferta"
+                checked={soloOferta}
+                onCheckedChange={(checked) => {
+                  updateFilter("oferta", checked ? "true" : null)
+                }}
+                className="min-w-[44px] min-h-[44px] flex items-center justify-center"
+              />
+              <Label htmlFor="solo-oferta" className="text-sm cursor-pointer flex-1 leading-relaxed">
+                Solo productos en oferta
               </Label>
             </div>
           </AccordionContent>
@@ -178,12 +204,17 @@ export function CatalogFilters({ categories, colors }: CatalogFiltersProps) {
       <div className="lg:hidden">
         <Sheet>
           <SheetTrigger asChild>
-            <Button variant="outline" className="w-full">
+            <Button variant="outline" className="w-full min-h-[44px] px-4 py-3">
               <Filter className="mr-2 h-4 w-4" />
               Filtros
               {hasActiveFilters && (
-                <span className="ml-2 flex h-5 w-5 items-center justify-center rounded-full bg-primary text-xs text-primary-foreground">
-                  !
+                <span className="ml-auto flex h-5 w-5 items-center justify-center rounded-full bg-primary text-xs text-primary-foreground">
+                  {[
+                    selectedCategory && 1,
+                    selectedColor && 1,
+                    soloStock && 1,
+                    soloOferta && 1
+                  ].filter(Boolean).length}
                 </span>
               )}
             </Button>

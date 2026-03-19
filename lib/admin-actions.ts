@@ -1,5 +1,6 @@
 import { createClient } from './supabase/client'
 import { Producto, Variante, Categoria, Color } from './types'
+import { optimizeImage, getBestFormat, optimizeImages } from './image-optimizer'
 
 // Funciones CRUD para Productos
 export async function createProducto(producto: Omit<Producto, 'id'>) {
@@ -122,31 +123,109 @@ export async function getColores() {
   return data || []
 }
 
-// Upload de imágenes a Supabase Storage
+// Upload de múltiples imágenes con optimización en paralelo
+export async function uploadMultipleImages(
+  files: File[], 
+  bucket: string = 'fotos-muebles',
+  onProgress?: (fileName: string, status: 'optimizing' | 'uploading' | 'completed' | 'error') => void
+): Promise<string[]> {
+  const supabase = createClient()
+  const urls: string[] = []
+  
+  try {
+    // Optimizar todas las imágenes en paralelo
+    const optimizedFiles = await optimizeImages(files, {
+      maxWidth: 1200,
+      maxSize: 300, // 300KB
+      quality: 0.85,
+      format: getBestFormat()
+    })
+
+    // Subir todas las imágenes en paralelo
+    const uploadPromises = optimizedFiles.map(async (file, index) => {
+      const originalFile = files[index]
+      
+      try {
+        onProgress?.(originalFile.name, 'uploading')
+        
+        // Generar nombre único para el archivo
+        const fileExt = file.name.split('.').pop()
+        const fileName = `${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`
+        const filePath = `${fileName}`
+
+        // Subir archivo optimizado
+        const { data, error } = await supabase.storage
+          .from(bucket)
+          .upload(filePath, file, {
+            cacheControl: '3600',
+            upsert: false
+          })
+
+        if (error) throw error
+
+        // Obtener URL pública
+        const { data: { publicUrl } } = supabase.storage
+          .from(bucket)
+          .getPublicUrl(filePath)
+
+        console.log(`Imagen optimizada: ${originalFile.name} (${(originalFile.size / 1024).toFixed(1)}KB) → ${file.name} (${(file.size / 1024).toFixed(1)}KB)`)
+
+        onProgress?.(originalFile.name, 'completed')
+        return publicUrl
+      } catch (error) {
+        onProgress?.(originalFile.name, 'error')
+        throw error
+      }
+    })
+
+    const uploadedUrls = await Promise.all(uploadPromises)
+    return uploadedUrls
+  } catch (error) {
+    console.error('Error al procesar imágenes:', error)
+    throw new Error('Error al procesar las imágenes')
+  }
+}
+
+// Upload de imágenes a Supabase Storage con optimización (legacy)
 export async function uploadImage(file: File, bucket: string = 'fotos-muebles') {
   const supabase = createClient()
   
-  // Generar nombre único para el archivo
-  const fileExt = file.name.split('.').pop()
-  const fileName = `${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`
-  const filePath = `${fileName}`
-
-  // Subir archivo
-  const { data, error } = await supabase.storage
-    .from(bucket)
-    .upload(filePath, file, {
-      cacheControl: '3600',
-      upsert: false
+  try {
+    // Optimizar imagen antes de subir
+    const optimizedFile = await optimizeImage(file, {
+      maxWidth: 1200,
+      maxSize: 300, // 300KB
+      quality: 0.85,
+      format: getBestFormat()
     })
 
-  if (error) throw error
+    // Generar nombre único para el archivo
+    const fileExt = optimizedFile.name.split('.').pop()
+    const fileName = `${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`
+    const filePath = `${fileName}`
 
-  // Obtener URL pública
-  const { data: { publicUrl } } = supabase.storage
-    .from(bucket)
-    .getPublicUrl(filePath)
+    // Subir archivo optimizado
+    const { data, error } = await supabase.storage
+      .from(bucket)
+      .upload(filePath, optimizedFile, {
+        cacheControl: '3600',
+        upsert: false
+      })
 
-  return publicUrl
+    if (error) throw error
+
+    // Obtener URL pública
+    const { data: { publicUrl } } = supabase.storage
+      .from(bucket)
+      .getPublicUrl(filePath)
+
+    console.log(`Imagen optimizada: ${file.name} (${(file.size / 1024).toFixed(1)}KB) → ${optimizedFile.name} (${(optimizedFile.size / 1024).toFixed(1)}KB)`)
+
+    return publicUrl
+  } catch (error) {
+    console.error('Error al optimizar/subir imagen:', error)
+    throw new Error('Error al procesar la imagen')
+  }
 }
 
 export async function deleteImage(url: string, bucket: string = 'fotos-muebles') {

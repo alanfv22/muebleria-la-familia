@@ -12,7 +12,11 @@ export const metadata: Metadata = {
 }
 
 export default async function OfertasPage() {
-  const products = await getProducts({ es_oferta: true })
+  // Obtener todos los productos y filtrar por ofertas
+  const allProducts = await getProducts()
+  const offerProducts = allProducts.filter((product) =>
+    product.variantes.some((v) => v.es_oferta === true)
+  )
 
   return (
     <div className="min-h-screen bg-background">
@@ -31,9 +35,9 @@ export default async function OfertasPage() {
           </div>
 
           {/* Products Grid */}
-          {products.length > 0 ? (
-            <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4 lg:gap-6">
-              {products.map((product) => (
+          {offerProducts.length > 0 ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 md:grid-cols-2 lg:grid-cols-3 lg:gap-6">
+              {offerProducts.map((product) => (
                 <ProductCard key={product.id} product={product} />
               ))}
             </div>

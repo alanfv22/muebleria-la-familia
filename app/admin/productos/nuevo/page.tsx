@@ -23,7 +23,7 @@ import {
   Image as ImageIcon
 } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
-import { saveProductoConVariantes, uploadImage, getCategorias, getColores } from '@/lib/admin-actions'
+import { saveProductoConVariantes, uploadMultipleImages, getCategorias, getColores } from '@/lib/admin-actions'
 import { Producto, Variante, Categoria, Color } from '@/lib/types'
 
 export default function NuevoProducto() {
@@ -55,6 +55,8 @@ export default function NuevoProducto() {
   
   // Estado de las imágenes
   const [uploadingImages, setUploadingImages] = useState(false)
+  const [uploadProgress, setUploadProgress] = useState<string[]>([])
+  const [isDragging, setIsDragging] = useState(false)
   const [tagInput, setTagInput] = useState('')
 
   useEffect(() => {
@@ -75,25 +77,63 @@ export default function NuevoProducto() {
 
   const handleImageUpload = async (files: FileList) => {
     setUploadingImages(true)
-    const newImages: string[] = []
+    setUploadProgress([])
     
     try {
-      for (const file of Array.from(files)) {
-        if (file.type.startsWith('image/')) {
-          const url = await uploadImage(file)
-          newImages.push(url)
+      const fileArray = Array.from(files)
+      const urls = await uploadMultipleImages(
+        fileArray,
+        'fotos-muebles',
+        (fileName, status) => {
+          switch (status) {
+            case 'optimizing':
+              setUploadProgress(prev => [...prev, `Optimizando ${fileName}...`])
+              break
+            case 'uploading':
+              setUploadProgress(prev => [...prev.slice(0, -1), `Subiendo ${fileName}...`])
+              break
+            case 'completed':
+              setUploadProgress(prev => [...prev.slice(0, -1), `✅ ${fileName} completado`])
+              break
+            case 'error':
+              setUploadProgress(prev => [...prev.slice(0, -1), `❌ Error en ${fileName}`])
+              break
+          }
         }
-      }
+      )
       
       setProducto(prev => ({
         ...prev,
-        imagenes: [...(prev.imagenes || []), ...newImages]
+        imagenes: [...(prev.imagenes || []), ...urls]
       }))
+      
+      // Limpiar progreso después de un tiempo
+      setTimeout(() => setUploadProgress([]), 3000)
     } catch (error) {
       console.error('Error uploading images:', error)
-      alert('Error al subir imágenes')
+      alert('Error al subir imágenes. Asegúrate de que sean archivos de imagen válidos.')
     } finally {
       setUploadingImages(false)
+    }
+  }
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault()
+    setIsDragging(true)
+  }
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.preventDefault()
+    setIsDragging(false)
+  }
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault()
+    setIsDragging(false)
+    
+    const files = e.dataTransfer.files
+    if (files.length > 0) {
+      handleImageUpload(files)
     }
   }
 
@@ -301,13 +341,29 @@ export default function NuevoProducto() {
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
-                <div className="border-2 border-dashed border-muted-foreground/25 rounded-lg p-6">
+                <div 
+                  className={`border-2 border-dashed rounded-lg p-6 transition-colors ${
+                    isDragging 
+                      ? 'border-primary bg-primary/5' 
+                      : 'border-muted-foreground/25 hover:border-muted-foreground/50'
+                  }`}
+                  onDragOver={handleDragOver}
+                  onDragLeave={handleDragLeave}
+                  onDrop={handleDrop}
+                >
                   <div className="text-center">
-                    <ImageIcon className="mx-auto h-12 w-12 text-muted-foreground" />
+                    <ImageIcon className={`mx-auto h-12 w-12 transition-colors ${
+                      isDragging ? 'text-primary' : 'text-muted-foreground'
+                    }`} />
                     <div className="mt-4">
                       <label htmlFor="image-upload" className="cursor-pointer">
                         <span className="mt-2 block text-sm font-medium text-muted-foreground">
-                          {uploadingImages ? 'Subiendo imágenes...' : 'Haz clic para subir imágenes o arrastra y suelta'}
+                          {uploadingImages 
+                            ? 'Procesando imágenes...' 
+                            : isDragging 
+                              ? 'Suelta las imágenes aquí' 
+                              : 'Haz clic para subir imágenes o arrastra y suelta'
+                          }
                         </span>
                         <input
                           id="image-upload"
@@ -319,12 +375,41 @@ export default function NuevoProducto() {
                           disabled={uploadingImages}
                         />
                       </label>
-                      <p className="text-xs text-muted-foreground mt-1">
-                        PNG, JPG, GIF hasta 10MB cada una
-                      </p>
+                      <div className="mt-2 space-y-1">
+                        <p className="text-xs text-muted-foreground">
+                          PNG, JPG, GIF hasta 10MB cada una
+                        </p>
+                        <p className="text-xs text-green-600 font-medium">
+                          ✨ Auto-optimización: Redimensionado a 1200px máximo y compresión WebP
+                        </p>
+                        <p className="text-xs text-blue-600">
+                          Las imágenes se optimizarán automáticamente para un rendimiento óptimo
+                        </p>
+                      </div>
                     </div>
                   </div>
                 </div>
+
+                {/* Progreso de optimización */}
+                {uploadProgress.length > 0 && (
+                  <div className="space-y-2">
+                    <p className="text-sm font-medium text-muted-foreground">Progreso de optimización:</p>
+                    <div className="space-y-1">
+                      {uploadProgress.map((progress, index) => (
+                        <div key={index} className="text-xs text-muted-foreground flex items-center gap-2">
+                          <span className={
+                            progress.includes('✅') ? 'text-green-600' : 
+                            progress.includes('❌') ? 'text-red-600' : 
+                            progress.includes('Optimizando') ? 'text-blue-600' : 
+                            'text-orange-600'
+                          }>
+                            {progress}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
 
                 {producto.imagenes && producto.imagenes.length > 0 && (
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-4">

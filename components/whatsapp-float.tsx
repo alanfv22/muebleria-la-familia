@@ -9,7 +9,7 @@ export function WhatsAppFloat() {
   const whatsappUrl = buildCustomWhatsAppUrl("Hola, quisiera hacer una consulta")
 
   return (
-    <div className="fixed bottom-6 right-6 z-50 flex flex-col items-end gap-3">
+    <div className="fixed bottom-4 right-4 sm:bottom-6 sm:right-6 z-50 flex flex-col items-end gap-3">
       {/* Expanded tooltip */}
       {isExpanded && (
         <div className="animate-in fade-in slide-in-from-bottom-2 duration-200 bg-card rounded-2xl shadow-xl p-4 max-w-xs border border-border">
@@ -24,7 +24,7 @@ export function WhatsAppFloat() {
             </div>
             <button
               onClick={() => setIsExpanded(false)}
-              className="text-muted-foreground hover:text-foreground transition-colors"
+              className="text-muted-foreground hover:text-foreground transition-colors min-h-[44px] min-w-[44px] flex items-center justify-center"
               aria-label="Cerrar"
             >
               <X className="h-4 w-4" />
@@ -34,7 +34,7 @@ export function WhatsAppFloat() {
             href={whatsappUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="mt-3 flex items-center justify-center gap-2 w-full py-2.5 px-4 bg-[#25D366] hover:bg-[#20BD5A] text-white font-medium rounded-xl transition-colors"
+            className="mt-3 flex items-center justify-center gap-2 w-full py-2.5 px-4 bg-[#25D366] hover:bg-[#20BD5A] text-white font-medium rounded-xl transition-colors min-h-[44px]"
           >
             <MessageCircle className="h-4 w-4" />
             Iniciar chat
@@ -49,14 +49,15 @@ export function WhatsAppFloat() {
         className={`
           flex items-center gap-2 rounded-full shadow-lg transition-all duration-300
           bg-[#25D366] hover:bg-[#20BD5A] text-white
-          ${isExpanded ? "px-5 py-3" : "p-4"}
+          ${isExpanded ? "px-5 py-3" : "p-3 sm:p-4"}
           hover:scale-105 active:scale-95
+          min-h-[44px] min-w-[44px]
         `}
         aria-label="Abrir chat de WhatsApp"
       >
-        <MessageCircle className="h-6 w-6" />
+        <MessageCircle className="h-5 w-5 sm:h-6 sm:w-6" />
         {isExpanded && (
-          <span className="font-medium animate-in fade-in duration-200">
+          <span className="font-medium animate-in fade-in duration-200 text-sm">
             Escribinos
           </span>
         )}

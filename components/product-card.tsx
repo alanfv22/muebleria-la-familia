@@ -23,7 +23,7 @@ export function ProductCard({ product }: ProductCardProps) {
   const whatsappUrl = buildWhatsAppUrl(product.nombre, undefined, undefined, minPrice)
 
   return (
-    <div className="group relative flex flex-col overflow-hidden rounded-2xl bg-card shadow-md hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
+    <div className="group relative flex flex-col overflow-hidden rounded-2xl bg-card shadow-md hover:shadow-xl transition-all duration-300 hover:-translate-y-1 w-full">
       {/* Image Container */}
       <Link href={`/producto/${product.id}`} className="relative aspect-[4/5] overflow-hidden">
         {mainImage ? (
@@ -41,18 +41,18 @@ export function ProductCard({ product }: ProductCardProps) {
         )}
 
         {/* Badges */}
-        <div className="absolute top-3 left-3 flex flex-col gap-2">
+        <div className="absolute top-2 left-2 flex flex-col gap-1.5">
           {isOffer && (
-            <Badge className="bg-[#DC2626] hover:bg-[#DC2626] text-white font-semibold">
+            <Badge className="bg-[#DC2626] hover:bg-[#DC2626] text-white font-semibold text-xs px-2 py-1">
               OFERTA
             </Badge>
           )}
           {hasStock ? (
-            <Badge className="bg-[#16A34A] hover:bg-[#16A34A] text-white font-medium">
+            <Badge className="bg-[#16A34A] hover:bg-[#16A34A] text-white font-medium text-xs px-2 py-1">
               Entrega inmediata
             </Badge>
           ) : (
-            <Badge className="bg-[#EA580C] hover:bg-[#EA580C] text-white font-medium">
+            <Badge className="bg-[#EA580C] hover:bg-[#EA580C] text-white font-medium text-xs px-2 py-1">
               A pedido
             </Badge>
           )}
@@ -63,27 +63,27 @@ export function ProductCard({ product }: ProductCardProps) {
       </Link>
 
       {/* Content */}
-      <div className="flex flex-1 flex-col p-4">
+      <div className="flex flex-1 flex-col p-3 sm:p-4">
         <Link href={`/producto/${product.id}`}>
-          <h3 className="font-[family-name:var(--font-poppins)] font-semibold text-foreground line-clamp-1 group-hover:text-primary transition-colors">
+          <h3 className="font-[family-name:var(--font-poppins)] font-semibold text-foreground line-clamp-2 text-sm sm:text-base group-hover:text-primary transition-colors leading-tight">
             {product.nombre}
           </h3>
         </Link>
 
         {product.descripcion && (
-          <p className="mt-1 text-sm text-muted-foreground line-clamp-2">
+          <p className="mt-1 text-xs sm:text-sm text-muted-foreground line-clamp-2 leading-relaxed">
             {product.descripcion}
           </p>
         )}
 
         {/* Price */}
-        <div className="mt-3 flex items-baseline gap-2">
+        <div className="mt-2 sm:mt-3 flex items-baseline gap-2 flex-wrap">
           {isOffer && maxListPrice > minPrice && (
-            <span className="text-sm text-muted-foreground line-through">
+            <span className="text-xs sm:text-sm text-muted-foreground line-through">
               {formatPrice(maxListPrice)}
             </span>
           )}
-          <span className="text-lg font-bold text-[#C89B6D]">
+          <span className="text-sm sm:text-base lg:text-lg font-bold text-[#C89B6D]">
             {hasMultipleVariants ? `Desde ${formatPrice(minPrice)}` : formatPrice(minPrice)}
           </span>
         </div>
@@ -91,7 +91,7 @@ export function ProductCard({ product }: ProductCardProps) {
         {/* WhatsApp Button */}
         <Button
           asChild
-          className="mt-4 w-full bg-[#C89B6D] hover:bg-[#B8895D] text-[#2B2B2B] font-medium active:scale-95 transition-transform"
+          className="mt-3 sm:mt-4 w-full bg-[#C89B6D] hover:bg-[#B8895D] text-[#2B2B2B] font-medium active:scale-95 transition-transform min-h-[44px] text-sm sm:text-base"
         >
           <a href={whatsappUrl} target="_blank" rel="noopener noreferrer">
             <MessageCircle className="mr-2 h-4 w-4" />
