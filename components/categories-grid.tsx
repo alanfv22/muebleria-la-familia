@@ -9,6 +9,16 @@ interface CategoriesGridProps {
   isLoading?: boolean
 }
 
+// Mapeo de categorías a términos de búsqueda de Unsplash
+const categoryImages: Record<string, string> = {
+  "cocina": "/images/cocina.png",
+  "combos": "/images/combos.jpg",
+  "exterior": "/images/exterior.jpg",
+  "dormitorio": "/images/dormitorio.png",
+  "living": "/images/living.png",
+}
+
+
 function CategorySkeleton() {
   return (
     <div className="group relative aspect-square overflow-hidden rounded-2xl">
@@ -49,29 +59,37 @@ export function CategoriesGrid({ categories, isLoading }: CategoriesGridProps) {
         </div>
 
         <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4 lg:gap-6">
-          {categories.map((category) => (
-            <Link
-              key={category.id}
-              href={`/catalogo?categoria=${category.id}`}
-              className="group relative aspect-square overflow-hidden rounded-2xl shadow-md hover:shadow-xl transition-all duration-300"
-            >
-              {/* Background */}
-              <div className="absolute inset-0 bg-gradient-to-br from-primary/30 to-primary/60 transition-all duration-300 group-hover:from-primary/40 group-hover:to-primary/70" />
+          {categories.map((category) => {
+            const imageUrl = categoryImages[category.nombre.toLowerCase()] || 
+                           "https://images.unsplash.com/photo-1586023492125-27b2c045efd7?w=800&h=800&fit=crop&crop=entropy&auto=format"
+            
+            return (
+              <Link
+                key={category.id}
+                href={`/catalogo?categoria=${category.id}`}
+                className="group relative aspect-square overflow-hidden rounded-2xl shadow-md hover:shadow-xl transition-all duration-300"
+              >
+                {/* Background Image */}
+                <div 
+                  className="absolute inset-0 bg-cover bg-center transition-transform duration-300 group-hover:scale-105"
+                  style={{ backgroundImage: `url(${imageUrl})` }}
+                />
+                
+                {/* Dark Overlay */}
+                <div className="absolute inset-0 bg-black/40" />
 
-              {/* Overlay */}
-              <div className="absolute inset-0 bg-gradient-to-t from-[#2B2B2B]/70 via-transparent to-transparent" />
-
-              {/* Content */}
-              <div className="absolute inset-0 flex flex-col items-center justify-center p-4 lg:p-6">
-                <h3 className="font-[family-name:var(--font-poppins)] text-lg font-semibold text-white lg:text-xl text-center group-hover:scale-105 transition-transform">
-                  {category.nombre}
-                </h3>
-                <span className="mt-2 text-sm text-white/70 opacity-0 group-hover:opacity-100 transition-opacity">
-                  Ver productos
-                </span>
-              </div>
-            </Link>
-          ))}
+                {/* Content */}
+                <div className="absolute inset-0 flex flex-col items-center justify-center p-4 lg:p-6">
+                  <h3 className="font-[family-name:var(--font-poppins)] text-lg font-semibold text-white lg:text-xl text-center group-hover:scale-105 transition-transform">
+                    {category.nombre}
+                  </h3>
+                  <span className="mt-2 text-sm text-white/90 opacity-0 group-hover:opacity-100 transition-opacity">
+                    Ver productos
+                  </span>
+                </div>
+              </Link>
+            )
+          })}
         </div>
       </div>
     </section>
